@@ -13,7 +13,7 @@ functions {
         return 1;
   }
 
-  real dixon_coles_log(int[2] goals, real rho, real mu1, real mu2) {
+  real dixon_coles_log(int[] goals, real rho, real mu1, real mu2) {
     int home;
     int away;
 
