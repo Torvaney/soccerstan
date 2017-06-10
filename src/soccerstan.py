@@ -109,7 +109,10 @@ def plot_team_parameter(data, title, alpha=0.05, axes_colour='dimgray'):
     upper = 1 - (alpha / 2)
     lower = 0 + (alpha / 2)
 
-    for i, team in enumerate(data.columns):
+    # Sort by median values
+    ordered_teams = data.median().sort_values().keys()
+
+    for i, team in enumerate(ordered_teams):
         x_mean = np.median(data[team])
         x_lower = np.percentile(data[team], lower * 100)
         x_upper = np.percentile(data[team], upper * 100)
@@ -117,9 +120,9 @@ def plot_team_parameter(data, title, alpha=0.05, axes_colour='dimgray'):
         ax.scatter(x_mean, i, alpha=1, color='black', s=25)
         ax.hlines(i, x_lower, x_upper, color='black')
 
-    ax.set_ylim([-1, len(data.columns)])
-    ax.set_yticks(list(range(len(data.columns))))
-    ax.set_yticklabels(list(data.columns))
+    ax.set_ylim([-1, len(ordered_teams)])
+    ax.set_yticks(list(range(len(ordered_teams))))
+    ax.set_yticklabels(list(ordered_teams))
 
     # Add title
     fig.suptitle(title, ha='left', x=0.125, fontsize=18, color='k')
@@ -150,6 +153,6 @@ if __name__ == '__main__':
     data, team_map = read_data(args.data)
     model = models.model_map[args.model]
 
-    output = fit_model(data, team_map, model, iter=args.iter)
+    output = fit_model(data, team_map, model, iter=args.iter, chains=args.chains)
 
     plot_output(model, output)
