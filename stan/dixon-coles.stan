@@ -36,8 +36,8 @@ data {
 
 parameters {
   real<lower=0> home_advantage;
-  real offense_raw[n_teams];
-  real defense_raw[n_teams];
+  real offense_raw[n_teams-1];
+  real defense_raw[n_teams-1];
   real rho;
 }
 
