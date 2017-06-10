@@ -141,11 +141,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('data', help='Location of file containing match data')
     parser.add_argument('model', help='Name of the model to be used')
+    parser.add_argument('--chains', help='Number of chains in Stan model',
+                        default=4, type=int)
+    parser.add_argument('--iter', help='Number of iterations in Stan model',
+                        default=2000, type=int)
     args = parser.parse_args()
 
     data, team_map = read_data(args.data)
     model = models.model_map[args.model]
 
-    output = fit_model(data, team_map, model)
+    output = fit_model(data, team_map, model, iter=args.iter)
 
     plot_output(model, output)
