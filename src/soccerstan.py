@@ -41,8 +41,29 @@ def read_data(fname):
     return data, team_map
 
 
-def fit_model(data, team_map, model, **kwargs):
-    stan_model = pystan.StanModel(model.modelfile)
+def fit_model(data, team_map, model, use_cache, **kwargs):
+    """
+    Fit a Stan model and return the output.
+
+    Arguments:
+     * data      -- Data containing football scores : pd.DataFrame
+     * team_map  -- name to id mapping : Dict
+     * model     -- Model to be fit : model.SoccerModel
+     * use_cache -- Whether the compiled Stan model should be loaded
+                    from/saved to file : Bool
+
+    Keyword arguments are passed to pystan.StanModel.sampling
+    """
+    if use_cache:
+        cache_file = os.path.join(os.path.dirname(__file__),
+                                  '../cache/{0}.pkl'.format(model.name))
+        try:
+            stan_model = joblib.load(cache_file)
+        except FileNotFoundError:
+            stan_model = pystan.StanModel(model.modelfile)
+            joblib.dump(stan_model, cache_file)
+    else:
+        stan_model = pystan.StanModel(model.modelfile)
 
     model_data = {
         'n_teams': len(data['home_team_id'].unique()),
@@ -67,18 +88,20 @@ def fit_model(data, team_map, model, **kwargs):
 
 
 def plot_output(model, output):
+    """ Plot parameters from Stan output and save to file. """
     for param in model.parameters:
         fig = plot_parameter(output[param], param, 'dimgray')
-        fig.savefig('{}/../figures/{}-{}.png'.format(
+        fig.savefig('{0}/../figures/{1}-{2}.png'.format(
             os.path.dirname(os.path.realpath(__file__)), model.name, param))
 
     for param in model.team_parameters:
         fig = plot_team_parameter(output[param], param, 0.05, 'dimgray')
-        fig.savefig('{}/../figures/{}-{}.png'.format(
+        fig.savefig('{0}/../figures/{1}-{2}.png'.format(
             os.path.dirname(os.path.realpath(__file__)), model.name, param))
 
 
 def plot_parameter(data, title, alpha=0.05, axes_colour='dimgray'):
+    """ Plot 1-dimensional parameters. """
     fig, ax = plt.subplots(figsize=(8, 6))
 
     ax.hist(data, bins=50, normed=True, color='black', edgecolor='None')
@@ -104,6 +127,7 @@ def plot_parameter(data, title, alpha=0.05, axes_colour='dimgray'):
 
 
 def plot_team_parameter(data, title, alpha=0.05, axes_colour='dimgray'):
+    """ Plot 2-dimensional parameters (i.e. a parameter for each team). """
     fig, ax = plt.subplots(figsize=(8, 6))
 
     upper = 1 - (alpha / 2)
@@ -144,6 +168,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('data', help='Location of file containing match data')
     parser.add_argument('model', help='Name of the model to be used')
+    parser.add_argument('--cache', help='Use cache to load/save compiled Stan model',
+                        action='store_true')
     parser.add_argument('--chains', help='Number of chains in Stan model',
                         default=4, type=int)
     parser.add_argument('--iter', help='Number of iterations in Stan model',
@@ -153,6 +179,13 @@ if __name__ == '__main__':
     data, team_map = read_data(args.data)
     model = models.model_map[args.model]
 
-    output = fit_model(data, team_map, model, iter=args.iter, chains=args.chains)
+    output = fit_model(
+        data,
+        team_map,
+        model,
+        args.cache,
+        iter=args.iter,
+        chains=args.chains
+    )
 
     plot_output(model, output)

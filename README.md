@@ -5,7 +5,9 @@ Reproductions of models for football (soccer) matches in Stan/PyStan.
 ## How do I run the models?
 
 It's pretty simple. You can just run the `src/soccerstan.py` module with the
-file containing match data (from [football-data.co.uk](football-data.co.uk)) and which model you want to use as arguments. For instance:
+file containing match data (from [football-data.co.uk](football-data.co.uk)) and which model you want to use as arguments.
+
+For instance:
 
 ```
 > python soccerstan.py 'data/example.csv' 'maher'
@@ -20,4 +22,6 @@ So far, the following models have been implemented:
 
 ## Data
 
-Data comes from [football-data.co.uk](football-data.co.uk). The 2015/16 English Premier League season has been added as an example data file.
+Data comes from [football-data.co.uk](football-data.co.uk).
+
+The 2015/16 English Premier League season has been added as an example data file.

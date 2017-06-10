@@ -2,6 +2,9 @@ data/*
 !data/readme.txt
 !data/example.csv
 
+cache/*
+!cache/readme.txt
+
 figures/*
 !figures/readme.txt
 
