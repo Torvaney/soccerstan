@@ -13,7 +13,7 @@ functions {
         return 1;
   }
 
-  real dixon_coles_log(int[] goals, real rho, real mu1, real mu2) {
+  real dixon_coles_log(int[2] goals, real rho, real mu1, real mu2) {
     int home;
     int away;
 
@@ -42,14 +42,17 @@ parameters {
 }
 
 transformed parameters {
-  // Enforce mean-to-one constraint
+  // Enforce sum-to-zero constraint
   real<lower=0> offense[n_teams];
   real<lower=0> defense[n_teams];
 
-  for (t in 1:(n_teams)) {
-    offense[t] = offense_raw[t] / mean(offense_raw);
-    defense[t] = defense_raw[t] / mean(defense_raw);
+  for (t in 1:(n_teams-1)) {
+    offense[t] = offense_raw[t];
+    defense[t] = defense_raw[t];
   }
+
+  offense[n_teams] = -sum(offense_raw);
+  defense[n_teams] = -sum(defense_raw);
 }
 
 model {
@@ -58,16 +61,16 @@ model {
   int score[2];
 
   // Priors (uninformative)
-  offense ~ normal(1, 100);
-  defense ~ normal(1, 100);
-  home_advantage ~ normal(1, 10);
+  offense ~ normal(0, 10);
+  defense ~ normal(0, 10);
+  home_advantage ~ normal(0, 100);
 
   for (g in 1:n_games) {
     score[1] = home_goals[g];
     score[2] = away_goals[g];
 
-    mu1[g] = offense[home_team[g]] * defense[away_team[g]] * home_advantage;
-    mu2[g] = offense[away_team[g]] * defense[home_team[g]];
+    mu1[g] = exp(offense[home_team[g]] + defense[away_team[g]] + home_advantage);
+    mu2[g] = exp(offense[away_team[g]] + defense[home_team[g]]);
 
     score ~ dixon_coles(rho, mu1[g], mu2[g]);
   }
