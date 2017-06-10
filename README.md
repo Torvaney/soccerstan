@@ -9,7 +9,7 @@ file containing match data (from [football-data.co.uk](football-data.co.uk)) and
 
 For instance:
 
-```
+```bash
 > python soccerstan.py 'data/example.csv' 'maher'
 ```
 
@@ -19,6 +19,7 @@ So far, the following models have been implemented:
 
  * Maher (1982)
  * Dixon and Coles (1997)
+ * Karlis and Ntzoufras (2008)
 
 ## Data
 
