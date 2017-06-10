@@ -36,15 +36,15 @@ data {
 
 parameters {
   real<lower=0> home_advantage;
-  real<lower=0> offense_raw[n_teams];
-  real<lower=0> defense_raw[n_teams];
+  real offense_raw[n_teams];
+  real defense_raw[n_teams];
   real rho;
 }
 
 transformed parameters {
   // Enforce sum-to-zero constraint
-  real<lower=0> offense[n_teams];
-  real<lower=0> defense[n_teams];
+  real offense[n_teams];
+  real defense[n_teams];
 
   for (t in 1:(n_teams-1)) {
     offense[t] = offense_raw[t];
