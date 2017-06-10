@@ -35,7 +35,7 @@ data {
 }
 
 parameters {
-  real<lower=0> home_advantage;
+  real home_advantage;
   real offense_raw[n_teams-1];
   real defense_raw[n_teams-1];
   real rho;
@@ -56,14 +56,15 @@ transformed parameters {
 }
 
 model {
-  vector[n_games] mu1;
-  vector[n_games] mu2;
+  real mu1[n_games];
+  real mu2[n_games];
   int score[2];
 
   // Priors (uninformative)
   offense ~ normal(0, 10);
   defense ~ normal(0, 10);
   home_advantage ~ normal(0, 100);
+  rho ~ normal(0, 100);
 
   for (g in 1:n_games) {
     score[1] = home_goals[g];
