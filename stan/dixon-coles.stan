@@ -1,26 +1,32 @@
 functions {
 
   real tau(int x, int y, real rho, real mu1, real mu2) {
-      if (x == 0 && y == 0)
-        return 1 - (mu1 * mu2 * rho);
-      else if (x == 0 && y == 1)
-        return 1 + (mu1 * rho);
-      else if (x == 1 && y == 0)
-        return 1 + (mu2 * rho);
-      else if (x == 1 && y == 1)
-        return 1 - rho;
-      else
-        return 1;
+    real adj;
+
+    if (x == 0 && y == 0)
+      adj = 1 - (mu1 * mu2 * rho);
+    else if (x == 0 && y == 1)
+      adj = 1 + (mu1 * rho);
+    else if (x == 1 && y == 0)
+      adj = 1 + (mu2 * rho);
+    else if (x == 1 && y == 1)
+      adj = 1 - rho;
+    else
+      adj = 1;
+
+    return adj;
   }
 
   real dixon_coles_log(int[] goals, real rho, real mu1, real mu2) {
     int home;
     int away;
+    real prob;
 
     home = goals[1];
     away = goals[2];
 
-    return poisson_lpmf(home | mu1) + poisson_lpmf(away | mu2) + log(tau(home, away, rho, mu1, mu2));
+    prob = poisson_lpmf(home | mu1) + poisson_lpmf(away | mu2) + log(tau(home, away, rho, mu1, mu2));
+    return prob;
   }
 
 }
@@ -60,11 +66,11 @@ model {
   real mu2[n_games];
   int score[2];
 
-  // Priors (uninformative)
-  offense ~ normal(0, 10);
-  defense ~ normal(0, 10);
-  home_advantage ~ normal(0, 100);
-  rho ~ normal(0, 100);
+  // Priors (weakly informative)
+  offense ~ normal(0, 2);
+  defense ~ normal(0, 2);
+  home_advantage ~ normal(0, 2);
+  rho ~ normal(0, 2);
 
   for (g in 1:n_games) {
     score[1] = home_goals[g];
