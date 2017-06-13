@@ -13,8 +13,7 @@ import models
 def stan_map(vector):
     """ Create a map of vector items : id. """
     unique_items = np.unique(vector)
-    number_of_unique_items = len(unique_items)
-    return dict(zip(unique_items, range(1, number_of_unique_items + 1)))
+    return {item: id_ for id_, item in enumerate(unique_items, start=1)}
 
 
 def read_data(fname):
@@ -30,7 +29,7 @@ def read_data(fname):
         .loc[lambda df: ~pd.isnull(df['home_goals'])]  # Remove future games
     )
 
-    team_map = stan_map(data['home_team'])
+    team_map = stan_map(pd.concat([data['home_team'], data['away_team']]))
     data['home_team_id'] = data['home_team'].replace(team_map)
     data['away_team_id'] = data['away_team'].replace(team_map)
 
@@ -66,7 +65,7 @@ def fit_model(data, team_map, model, use_cache, **kwargs):
         stan_model = pystan.StanModel(model.modelfile)
 
     model_data = {
-        'n_teams': len(data['home_team_id'].unique()),
+        'n_teams': len(team_map),
         'n_games': len(data),
         'home_team': data['home_team_id'],
         'away_team': data['away_team_id'],
