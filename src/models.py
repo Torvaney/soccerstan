@@ -32,4 +32,16 @@ dixon_coles = SoccerModel(
 )
 
 
-model_map = {model.name: model for model in [maher, dixon_coles]}
+karlis_ntzoufras = SoccerModel(
+    name='karlis-ntzoufras',
+    modelfile=stanfile('karlis-ntzoufras.stan'),
+    parameters=('home_advantage', 'constant_mu', 'mixing_proportion'),
+    team_parameters=('offense', 'defense')
+)
+
+
+model_map = {
+    model.name: model for model in [
+        maher, dixon_coles, karlis_ntzoufras
+    ]
+}
