@@ -42,43 +42,52 @@ data {
 
 parameters {
   real home_advantage;
-  real offense_raw[n_teams-1];
-  real defense_raw[n_teams-1];
-  real rho;
+  vector[n_teams - 1] offense_raw;
+  vector[n_teams - 1] defense_raw;
+  real<lower=0, upper=1> rho_raw;
 }
 
 transformed parameters {
-  // Enforce sum-to-zero constraint
-  real offense[n_teams];
-  real defense[n_teams];
+  vector[n_teams] offense;
+  vector[n_teams] defense;
+  real rho;
 
-  for (t in 1:(n_teams-1)) {
-    offense[t] = offense_raw[t];
-    defense[t] = defense_raw[t];
+  // Enforce sum-to-zero constraint
+  offense[1:(n_teams - 1)]  = offense_raw;
+  defense[1:(n_teams - 1)]  = defense_raw;
+  offense[n_teams]          = -sum(offense_raw);
+  defense[n_teams]          = -sum(defense_raw);
+
+  // Enforce upper and lower bound on rho
+  {
+    vector[n_games] mu1 = exp(offense[home_team] - defense[away_team] + home_advantage);
+    vector[n_games] mu2 = exp(offense[away_team] - defense[home_team]);
+    real upper_bound = min({min(1. ./ (mu1 .* mu2)), 1});
+    real lower_bound = max({max(-1. ./ mu1), max(-1. ./ mu2)});
+    real range = upper_bound - lower_bound;
+    rho = lower_bound + rho_raw * range;
   }
 
-  offense[n_teams] = -sum(offense_raw);
-  defense[n_teams] = -sum(defense_raw);
 }
 
 model {
-  real mu1[n_games];
-  real mu2[n_games];
+  real mu1;
+  real mu2;
   int score[2];
 
   // Priors (weakly informative)
   offense ~ normal(0, 2);
   defense ~ normal(0, 2);
   home_advantage ~ normal(0, 2);
-  rho ~ normal(0, 2);
+  rho_raw ~ uniform(0, 1);
 
   for (g in 1:n_games) {
     score[1] = home_goals[g];
     score[2] = away_goals[g];
 
-    mu1[g] = exp(offense[home_team[g]] + defense[away_team[g]] + home_advantage);
-    mu2[g] = exp(offense[away_team[g]] + defense[home_team[g]]);
+    mu1 = exp(offense[home_team[g]] + defense[away_team[g]] + home_advantage);
+    mu2 = exp(offense[away_team[g]] + defense[home_team[g]]);
 
-    score ~ dixon_coles(rho, mu1[g], mu2[g]);
+    score ~ dixon_coles(rho, mu1, mu2);
   }
 }
